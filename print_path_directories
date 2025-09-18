@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+extern char **environ;
+
+char *_getenv(const char *name)
+{
+	int i = 0;
+	size_t len = strlen(name);
+
+	while (environ[i])
+	{
+		if (strncmp(environ[i], name, len) == 0 && environ[i][len] == '=')
+			return (environ[i] + len + 1);
+		i++;
+	}
+	return (NULL);
+}
+
+void print_path_dirs(void)
+{
+	char *path = _getenv("PATH");
+	char *token;
+
+	if (!path)
+	{
+		printf("PATH not found.\n");
+		return;
+	}
+
+	char *path_copy = strdup(path);
+
+	if (!path_copy)
+	{
+		perror("strdup");
+		return;
+	}
+
+	token = strtok(path_copy, ":");
+	while (token)
+	{
+		printf("%s\n", token);
+		token = strtok(NULL, ":");
+	}
+
+	free(path_copy);
+}
+
+int main(void)
+{
+	print_path_dirs();
+	return (0);
+}
