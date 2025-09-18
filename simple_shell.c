@@ -1,20 +1,21 @@
-#define _GNU_SOURCE
-#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+extern char **environ;
 /**
- * display_prompt - is displayed again each time a command has been executed
+ * display_prompt - prints the shell prompt
  */
 void display_prompt(void)
 {
-	write(STDOUT_FILENO, "#cisfun$ ", 9);
+	write(STDOUT_FILENO, "#myshell$", 9);
 }
-
 /**
- * read_command - reads a line from stdin.
- * Return: Pointer to the input string, or NULL on EOF.
+ * read_command - reads a command line from stdin
+ * Return: pointer to the input string, or NULL on EOF
  */
 char *read_command(void)
 {
@@ -36,14 +37,14 @@ char *read_command(void)
 }
 
 /**
- * execute_command - forks and executes the command using execve
- * @command: the full path to the executable
+ * execute_command - executes the command if valid
+ * @command: full path to the executable
  */
 void execute_command(char *command)
 {
 	pid_t pid;
 	int status;
-	char *argv[20];
+	char *argv[2];
 
 	argv[0] = command;
 	argv[1] = NULL;
@@ -51,17 +52,15 @@ void execute_command(char *command)
 	pid = fork();
 	if (pid == -1)
 	{
-		perror("fork");
+		perror("fork failed");
 		return;
 	}
 
 	if (pid == 0)
 	{
-		if (execve(command, argv, environ) == -1)
-		{
-			perror("./shell");
-			exit(EXIT_FAILURE);
-		}
+		execve(command, argv, NULL);
+		perror("execve failed");
+		exit(EXIT_FAILURE);
 	}
 	else
 	{
@@ -70,20 +69,24 @@ void execute_command(char *command)
 }
 
 /**
- * main - main loop of the shell.
- * Return: 0 on success.
+ * main - simple shell loop
+ * Return: 0 on success
  */
 int main(void)
 {
-	int i = 0;
+	char *command;
 
 	while (1)
 	{
 		display_prompt();
+
 		command = read_command();
 
-		if (command == NULL)  /* Handle Ctrl+D */
+		if (command == NULL)
+		{
+			write(STDOUT_FILENO, "\n", 1);
 			break;
+		}
 
 		if (strlen(command) > 0)
 			execute_command(command);
