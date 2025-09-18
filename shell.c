@@ -1,7 +1,9 @@
+#define _GNU_SOURCE
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 /**
  * display_prompt - is displayed again each time a command has been executed
  */
@@ -42,6 +44,7 @@ void execute_command(char *command)
 	pid_t pid;
 	int status;
 	char *argv[20];
+
 	argv[0] = command;
 	argv[1] = NULL;
 
@@ -72,7 +75,7 @@ void execute_command(char *command)
  */
 int main(void)
 {
-	char *command;
+	int i = 0;
 
 	while (1)
 	{
