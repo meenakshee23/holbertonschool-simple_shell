@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -6,6 +7,7 @@
 #include <sys/wait.h>
 
 extern char **environ;
+
 /**
  * display_prompt - prints the shell prompt
  */
@@ -13,6 +15,7 @@ void display_prompt(void)
 {
 	write(STDOUT_FILENO, "#myshell$", 9);
 }
+
 /**
  * read_command - reads a command line from stdin
  * Return: pointer to the input string, or NULL on EOF
