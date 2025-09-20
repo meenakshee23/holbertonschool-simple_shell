@@ -8,51 +8,48 @@
 extern char **environ;
 
 /**
- * execute_command - forks and executes the command
- * @line: the input command string
+ * trim_spaces - trim leading and trailing spaces of string
+ * @str: input string
+ * Return: pointer to trimmed string
  */
-void execute_command(char *line)
+char *trim_spaces(char *str)
 {
-	pid_t pid;
-	int status;
-	char *args[2];
+	char *end;
 
-	pid = fork();
+	while (*str == ' ' || *str == '\t')
+		str++;
 
-	if (pid == 0)
-	{
-		args[0] = line;
-		args[1] = NULL;
+	if (*str == '\0')
+		return (str);
 
-		if (execve(line, args, environ) == -1)
-		{
-			printf("Command not found\n");
-			exit(1);
-		}
-	}
-	else if (pid > 0)
+	end = str + strlen(str) - 1;
+	while (end > str && (*end == ' ' || *end == '\t' || *end == '\n'))
 	{
-		wait(&status);
+		*end = '\0';
+		end--;
 	}
-	else
-	{
-		perror("fork");
-		free(line);
-		exit(1);
-	}
+
+	return (str);
 }
 
 /**
- * main - simple shell that executes a single command
- *
- *  Return: Always 0
+ * main - simple shell
+ * Return: 0 on success
  */
 int main(void)
 {
-	int interactive = isatty(STDIN_FILENO);
-	char *line = NULL;
-	size_t len = 0;
+	int interactive;
+	char *line;
+	size_t len;
 	ssize_t nread;
+	pid_t pid;
+	int status;
+	char *command;
+	char *args[2];
+
+	interactive = isatty(STDIN_FILENO);
+	line = NULL;
+	len = 0;
 
 	while (1)
 	{
@@ -61,14 +58,37 @@ int main(void)
 
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
-		{
-			free(line);
 			break;
-		}
 
 		line[nread - 1] = '\0';
 
-		execute_command(line);
+		command = trim_spaces(line);
+
+		if (command[0] == '\0')
+			continue;
+
+		pid = fork();
+		if (pid == 0)
+		{
+			args[0] = command;
+			args[1] = NULL;
+
+			if (execve(command, args, environ) == -1)
+			{
+				printf("Command not found\n");
+				exit(1);
+			}
+		}
+		else if (pid > 0)
+		{
+			wait(&status);
+		}
+		else
+		{
+			perror("fork");
+			free(line);
+			exit(1);
+		}
 	}
 
 	free(line);
