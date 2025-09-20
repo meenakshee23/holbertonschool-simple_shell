@@ -2,54 +2,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 
 extern char **environ;
 
 /**
- * trim_spaces - trim leading and trailing spaces of string
- * @str: input string
- * Return: pointer to trimmed string
+ * trim_spaces - Removes leading and trailing spaces from a string
+ * @str: Input string
+ * Return: Trimmed string
  */
 char *trim_spaces(char *str)
 {
 	char *end;
 
-	while (*str == ' ' || *str == '\t')
+	while (*str == ' ')
 		str++;
 
-	if (*str == '\0')
-		return (str);
+	if (*str == 0)
+		return str;
 
 	end = str + strlen(str) - 1;
-	while (end > str && (*end == ' ' || *end == '\t' || *end == '\n'))
-	{
-		*end = '\0';
+	while (end > str && *end == ' ')
 		end--;
-	}
 
-	return (str);
+	end[1] = '\0';
+	return str;
 }
 
 /**
- * main - simple shell
- * Return: 0 on success
+ * main - Simple shell main loop
+ * Return: Always 0
  */
 int main(void)
 {
-	int interactive;
-	char *line;
-	size_t len;
+	int interactive, status, i;
+	char *line = NULL;
+	size_t len = 0;
 	ssize_t nread;
 	pid_t pid;
-	int status;
 	char *command;
-	char *args[2];
+	char *token;
+	char *args[64];
 
 	interactive = isatty(STDIN_FILENO);
-	line = NULL;
-	len = 0;
 
 	while (1)
 	{
@@ -58,22 +56,30 @@ int main(void)
 
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
+		{
+			free(line);
 			break;
+		}
 
 		line[nread - 1] = '\0';
-
 		command = trim_spaces(line);
 
 		if (command[0] == '\0')
 			continue;
 
+		i = 0;
+		token = strtok(command, " ");
+		while (token != NULL && i < 63)
+		{
+			args[i++] = token;
+			token = strtok(NULL, " ");
+		}
+		args[i] = NULL;
+
 		pid = fork();
 		if (pid == 0)
 		{
-			args[0] = command;
-			args[1] = NULL;
-
-			if (execve(command, args, environ) == -1)
+			if (execve(args[0], args, environ) == -1)
 			{
 				printf("Command not found\n");
 				exit(1);
