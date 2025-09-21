@@ -46,8 +46,6 @@ int main(void)
 	int status;
 	char *command;
 	char *args[64];
-	int i;
-	char *token;
 
 	interactive = isatty(STDIN_FILENO);
 	line = NULL;
@@ -66,15 +64,8 @@ int main(void)
 
 		command = trim_spaces(line);
 
-		i = 0;
-		token = strtok(command, " \t\n");
-
-		while (token != NULL && i < 63)
-		{
-			args[i++] = token;
-			token = strtok(NULL, " \t\n");
-		}
-		args[i] = NULL;
+		args[0] = strtok(command, " \t\n");
+		args[1] = NULL;
 
 		if (command[0] == '\0')
 			continue;
