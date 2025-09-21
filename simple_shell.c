@@ -2,35 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <errno.h>
 
 extern char **environ;
-
-/**
- * trim_spaces - trim leading and trailing spaces of string
- * @str: input string
- * Return: pointer to trimmed string
- */
-char *trim_spaces(char *str)
-{
-	char *end;
-
-	while (*str == ' ' || *str == '\t')
-		str++;
-
-	if (*str == '\0')
-		return (str);
-
-	end = str + strlen(str) - 1;
-	while (end > str && (*end == ' ' || *end == '\t' || *end == '\n'))
-	{
-		*end = '\0';
-		end--;
-	}
-
-	return (str);
-}
 
 /**
  * main - simple shell
@@ -38,62 +15,86 @@ char *trim_spaces(char *str)
  */
 int main(void)
 {
-	int interactive;
-	char *line;
-	size_t len;
-	ssize_t nread;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
 	pid_t pid;
 	int status;
-	char *command;
-	char *args[64];
-
-	interactive = isatty(STDIN_FILENO);
-	line = NULL;
-	len = 0;
+	int interactive = isatty(STDIN_FILENO);
+	char *argv[64];
+	int argc;
+	int i;
+	char *token;
 
 	while (1)
 	{
 		if (interactive)
+		{
 			printf("simpleshell$ ");
+		}
 
-		nread = getline(&line, &len, stdin);
-		if (nread == -1)
+		read = getline(&line, &len, stdin);
+		if (read == -1)
+		{
+			if (interactive)
+				printf("simpleshell$\n");
 			break;
+		}
 
-		line[nread - 1] = '\0';
+		if (line[read - 1] == '\n')
+			line[read - 1] = '\0';
 
-		command = trim_spaces(line);
-
-		args[0] = strtok(command, " \t\n");
-		args[1] = NULL;
-
-		if (command[0] == '\0')
+		if (line[0] == '\0')
 			continue;
 
-		pid = fork();
-		if (pid == 0)
-		{
-			args[0] = command;
-			args[1] = NULL;
+		argc = 0;
+		token = strtok(line, " ");
 
-			if (execve(args[0], args, environ) == -1)
-			{
-				printf("Command not found\n");
-				exit(1);
-			}
-		}
-		else if (pid > 0)
+		while (token != NULL && argc < 63)
 		{
-			wait(&status);
+			argv[argc] = token;
+			token = strtok(NULL, " ");
+			argc++;
 		}
-		else
+
+		argv[argc] = NULL;
+		if (argc == 0)
+			continue;
+
+		if (strcmp(argv[0], "exit") == 0)
+			break;
+		if (strcmp(argv[0], "env") == 0)
+		{
+			for (i = 0; environ[i] != NULL; i++)
+				printf("%s\n", environ[i]);
+			continue;
+		}
+		if (argv[0][0] != '/' && !(argv[0][0] == '.' && argv[0][1] == '/'))
+		{
+			printf("Command not found\n");
+			continue;
+        }
+		pid = fork();
+		if (pid == -1)
 		{
 			perror("fork");
-			free(line);
-			exit(1);
-		}
-	}
+			continue;
+        }
 
+		if (pid == 0)
+		{
+			if (execve(argv[0], argv, environ) == -1)
+			{
+				printf("Command not found\n");
+				exit(EXIT_FAILURE);
+			}
+        }
+		else
+        {
+			waitpid(pid, &status, 0);
+		}
+    }
 	free(line);
 	return (0);
 }
+
