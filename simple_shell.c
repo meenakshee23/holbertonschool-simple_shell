@@ -45,7 +45,9 @@ int main(void)
 	pid_t pid;
 	int status;
 	char *command;
-	char *args[2];
+	char *args[64];
+	int i;
+	char *token;
 
 	interactive = isatty(STDIN_FILENO);
 	line = NULL;
@@ -64,6 +66,16 @@ int main(void)
 
 		command = trim_spaces(line);
 
+		i = 0;
+		token = strtok(command, " \t\n");
+
+		while (token != NULL && i < 63)
+		{
+			args[i++] = token;
+			token = strtok(NULL, " \t\n");
+		}
+		args[i] = NULL;
+
 		if (command[0] == '\0')
 			continue;
 
@@ -73,7 +85,7 @@ int main(void)
 			args[0] = command;
 			args[1] = NULL;
 
-			if (execve(command, args, environ) == -1)
+			if (execve(args[0], args, environ) == -1)
 			{
 				printf("Command not found\n");
 				exit(1);
