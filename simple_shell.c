@@ -20,12 +20,16 @@ int main(void)
 	ssize_t nread;
 	pid_t pid;
 	int status;
+	int interactive = isatty(STDIN_FILENO);
 	char *argv[2];
 
 	while (1)
 	{
-		printf("simpleshell$");
-		fflush(stdout);
+		if (interactive)
+		{
+			printf("simpleshell$");
+			fflush(stdout);
+		}
 
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
