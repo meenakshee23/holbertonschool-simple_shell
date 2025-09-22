@@ -25,8 +25,9 @@ int main(void)
 	while (1)
 	{
 		printf("simpleshell$");
-		nread = getline(&line, &len, stdin);
+		fflush(stdout);
 
+		nread = getline(&line, &len, stdin);
 		if (nread == -1)
 		{
 			printf("simpleshell$\n");
