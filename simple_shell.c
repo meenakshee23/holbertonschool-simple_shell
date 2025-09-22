@@ -34,7 +34,8 @@ int main(void)
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
 		{
-			printf("\n");
+			if (interactive)
+				printf("simpleshell$\n");
 			break;
 		}
 		if (line[nread - 1] == '\n')
