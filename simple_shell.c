@@ -22,6 +22,10 @@ int main(void)
 	int status;
 	int interactive = isatty(STDIN_FILENO);
 	char *argv[2];
+	char argv;
+	int i;
+	int *token;
+
 
 	while (1)
 	{
@@ -43,6 +47,10 @@ int main(void)
 
 		if (line[0] == '\0')
 			continue;
+
+		argc = 0;
+		token = strtok(line, " ");
+
 
 		argv[0] = line;
 		argv[1] = NULL;
