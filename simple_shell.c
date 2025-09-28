@@ -23,6 +23,8 @@ int main(void)
 	int status;
 	int interactive = isatty(STDIN_FILENO);
 	char *token;
+	char *argv[64];
+	int argc = 0;
 
 	while (1)
 	{
@@ -46,7 +48,12 @@ int main(void)
 			continue;
 
 		token = strtok(line, " ");
-		while (token != NULL)
+		while (token != NULL && argc < 63)
+		{
+			argv[argc++] = token;
+			token = strtok(NULL, " ");
+		}
+		argv[argc] = NULL;
 		{
 			pid = fork();
 			if (pid == -1)
@@ -57,9 +64,6 @@ int main(void)
 			}
 			else if (pid == 0)
 			{
-				char *argv[2];
-				argv[0] = token;
-				argv[1] = NULL;
 				execve(argv[0], argv, environ);
 				perror("simpleshell");
 				exit(EXIT_FAILURE);
