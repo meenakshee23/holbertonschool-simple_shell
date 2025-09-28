@@ -1,37 +1,41 @@
 #define _GNU_SOURCE
+#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 #include <errno.h>
 
 extern char **environ;
+
 /**
  * main - simple shell
- * Return: 0 success
+ * Return: 0 on success
  */
 int main(void)
 {
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t nread;
-	char *argv[2];
 	pid_t pid;
 	int status;
+	int interactive = isatty(STDIN_FILENO);
+	char *token;
 
 	while (1)
 	{
-		if (isatty(STDIN_FILENO))
-
-		printf("simpleshell$ ");
+		if (interactive)
+			printf("simpleshell$ ");
 		fflush(stdout);
+
 
 		nread = getline(&line, &len, stdin);
 		if (nread == -1)
 		{
-			printf("\n");
+			if (interactive)
+				printf("\n");
 			break;
 		}
 
@@ -41,30 +45,33 @@ int main(void)
 		if (line[0] == '\0')
 			continue;
 
-		argv[0] = line;
-		argv[1] = NULL;
-
-		pid = fork();
-		if (pid == -1)
+		token = strtok(line, " ");
+		while (token != NULL)
 		{
-			perror("fork");
-			continue;
-		}
-
-		if (pid == 0)
-		{
-			if (execve(argv[0], argv, environ) == -1)
+			pid = fork();
+			if (pid == -1)
 			{
+				perror("fork");
+				free(line);
+				exit(EXIT_FAILURE);
+			}
+			else if (pid == 0)
+			{
+				char *argv[2];
+				argv[0] = token;
+				argv[1] = NULL;
+				execve(argv[0], argv, environ);
 				perror("simpleshell");
 				exit(EXIT_FAILURE);
 			}
-		}
-		else
-		{
-			wait(&status);
+			else
+			{
+				wait(&status);
+				token = strtok(NULL, " ");
+			}
 		}
 	}
-
 	free(line);
 	return (0);
 }
+
