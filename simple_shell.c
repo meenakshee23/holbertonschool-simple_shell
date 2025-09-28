@@ -44,6 +44,12 @@ int main(void)
 		if (line[0] == '\0')
 			continue;
 
+		while (*line == ' ' || *line == '\t')
+			line++;
+
+		if (*line == '\0')
+			continue;
+
 		argv[0] = line;
 		argv[1] = NULL;
 
@@ -66,7 +72,7 @@ int main(void)
 			waitpid(pid, &status, 0);
 		}
 	}
-
+	
 	free(line);
 	return (0);
 }
