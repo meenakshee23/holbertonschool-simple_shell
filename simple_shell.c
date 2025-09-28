@@ -56,6 +56,9 @@ int main(void)
 			token = strtok(NULL, " ");
 		}
 		argv[argc] = NULL;
+
+		if (argv[0] == NULL)
+			continue;
 		{
 			pid = fork();
 			if (pid == -1)
