@@ -23,6 +23,8 @@ int main(void)
 
 	while (1)
 	{
+		if (isatty(STDIN_FILENO))
+
 		printf("simpleshell$ ");
 		fflush(stdout);
 
