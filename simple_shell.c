@@ -22,9 +22,10 @@ int main(void)
 	pid_t pid;
 	int status;
 	int interactive = isatty(STDIN_FILENO);
-	char *token;
+	int argc;
 	char *argv[64];
-	int argc = 0;
+	char *token;
+
 
 	while (1)
 	{
@@ -47,6 +48,7 @@ int main(void)
 		if (line[0] == '\0')
 			continue;
 
+		argc = 0;
 		token = strtok(line, " ");
 		while (token != NULL && argc < 63)
 		{
