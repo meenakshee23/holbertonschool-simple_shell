@@ -9,6 +9,7 @@
 #include <errno.h>
 
 extern char **environ;
+
 /**
  * main - simple shell
  * Return: 0 success
@@ -50,9 +51,6 @@ int main(void)
 		if (*line == '\0')
 			continue;
 
-		argv[0] = line;
-		argv[1] = NULL;
-
 		pid = fork();
 		if (pid == -1)
 		{
@@ -61,9 +59,14 @@ int main(void)
 		}
 		if (pid == 0)
 		{
+			char *cmd = strdup(line);
+			argv[0] = cmd;
+			argv[1] = NULL;
+
 			if (execve(argv[0], argv, environ) == -1)
 			{
 				perror("simpleshell");
+				free(cmd);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -71,8 +74,8 @@ int main(void)
 		{
 			waitpid(pid, &status, 0);
 		}
-	}
-	
+    }
+
 	free(line);
 	return (0);
 }
