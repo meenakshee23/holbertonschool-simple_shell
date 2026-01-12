@@ -66,6 +66,8 @@ int main(void)
     int argc;
     char *argv[64];
     char *token;
+    char *cmd_path;
+    int i;
 
     while (1)
     {
@@ -105,15 +107,14 @@ int main(void)
             exit(0);
         }
 
-		/* Built-in env command */
-		if (strcmp(argv[0], "env") == 0)
-		{
-			for (int i = 0; environ[i]; i++)
-			printf("%s\n", environ[i]);
-		continue;
-	}
+        if (strcmp(argv[0], "env") == 0)
+        {
+            for (i = 0; environ[i]; i++)
+                printf("%s\n", environ[i]);
+            continue;
+        }
 
-        char *cmd_path = find_command(argv[0]);
+        cmd_path = find_command(argv[0]);
         if (!cmd_path)
         {
             fprintf(stderr, "%s: command not found\n", argv[0]);
@@ -138,6 +139,7 @@ int main(void)
             wait(&status);
         }
     }
+
     free(line);
     return (0);
 }
