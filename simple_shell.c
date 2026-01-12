@@ -12,25 +12,40 @@ extern char **environ;
 
 char *find_command(char *command)
 {
-    char *path_env = getenv("PATH");
+    char *path_env = NULL;
     char *path_copy, *dir;
-    char *full_path = malloc(1024);
+    char *full_path;
+    int i;
 
-    if (!path_env || !full_path)
+    if (!command)
         return NULL;
 
     if (strchr(command, '/'))
     {
         if (access(command, X_OK) == 0)
             return command;
-        free(full_path);
         return NULL;
     }
 
+    for (i = 0; environ[i]; i++)
+    {
+        if (strncmp(environ[i], "PATH=", 5) == 0)
+        {
+            path_env = environ[i] + 5;
+            break;
+        }
+    }
+    if (!path_env)
+        return NULL;
+
     path_copy = strdup(path_env);
     if (!path_copy)
+        return NULL;
+
+    full_path = malloc(1024);
+    if (!full_path)
     {
-        free(full_path);
+        free(path_copy);
         return NULL;
     }
 
@@ -51,10 +66,6 @@ char *find_command(char *command)
     return NULL;
 }
 
-/**
- * main - simple shell
- * Return: 0 on success
- */
 int main(void)
 {
     char *line = NULL;
@@ -63,8 +74,8 @@ int main(void)
     pid_t pid;
     int status;
     int interactive = isatty(STDIN_FILENO);
-    int argc;
     char *argv[64];
+    int argc;
     char *token;
     char *cmd_path;
     int i;
@@ -141,5 +152,5 @@ int main(void)
     }
 
     free(line);
-    return (0);
+    return 0;
 }
