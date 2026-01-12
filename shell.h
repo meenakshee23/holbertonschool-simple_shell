@@ -11,5 +11,6 @@
 
 extern char **environ;
 
-#endif
+char *find_command(char *command);
 
+#endif
